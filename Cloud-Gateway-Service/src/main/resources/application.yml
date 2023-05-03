@@ -1,0 +1,52 @@
+server:
+  port: 7001 #From here on out, we'll be funneling all our http requests through this port, localhost:7000
+  
+
+spring: 
+  application:
+    name: My-Gateway 
+  config:
+    import: 'optional:consul:'
+  
+  cloud: 
+    gateway: 
+      routes: # Here is where all of our endpoints are going to be specified. 
+      - id: example-route-to-google # The id is simply a label for this route, this route will hopefully redirect any requests to "www.google.com"
+        uri: https://www.google.com #where we will route to 
+        predicates: #This is the conditions we will need to use this route. We can base this of headers, path url, tokens, etc . 
+        - Path=/example # requests to localhost:7001/example --> www.google.com 
+        filters: # This is used to modify the original request 
+        - SetPath=/ #Delete the example path value so that the request is simple www.google.com
+      
+      #Terrible way of oding it!!!!!!
+      - id: hardcoded-planet-service-route 
+        uri: http://localhost:9900 # we will route to a specific instance 
+        predicates:
+        - Path=/rubbish/** # localhost:7001/planet-api/<anything> --> localhost:9900/... e.g. localhost:7001/planet-api/planets -> localhost:9900/planet-api/planets
+        filters: 
+        - RewritePath=/planet-api(?<segment>/?.*), $\{segment} #remove the planet-api from the path e.g. /planet-api/planets -> /planets
+        
+        #Better way of doing it - using a round robin style of selecting each service 
+      - id: better-planet-route
+        uri: lb://My-Very-Fun-Planet-Service #We're using consul's knowledge to figure out our services, lb is short for "load balancer"
+        predicates:
+        - Path=/planet-api/** # localhost:7001/planet-api/<anything> --> localhost:9900/... e.g. localhost:7001/planet-api/planets -> localhost:9900/planet-api/planets
+        filters: 
+        - RewritePath=/planet-api(?<segment>/?.*), $\{segment} #remove the planet-api from the path e.g. /planet-api/planets -> /planets
+        
+      - id: consumer-service-route 
+        uri: lb://Consumer-Service 
+        predicates: 
+        - Path=/front-facing/**
+        # -Cookie=key,value
+        # Host
+        # Before or AFter a certain time 
+        
+        filters: 
+        - RewritePath=/front-facing(?<segment>/?.*), $\{segment}
+        
+        
+        # Route: consists of an ID, a destination URI and a collection of predicates and filters: 
+        # Predicates: build of Java 8 function predicates - this alows us to match requests to our routes (HTTP uri, methods, time, cookies, etc . )
+        # Filter: These are instances of Spring Gateway filters, allows us to modify the requests or responses before being sent 
+      

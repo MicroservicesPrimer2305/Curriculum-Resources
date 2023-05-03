@@ -1,13 +1,17 @@
 package com.example.demo.service;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.demo.models.Planet;
+
+import io.github.resilience4j.retry.annotation.Retry;
 
 /**
  * 
@@ -38,16 +42,20 @@ public class PlanetService {
 
 	private final RestTemplate restTemplate; //This is specifically what we're going to use!
 	
-	private final String endpoint  = "http://localhost:9700/";
+	private final String endpoint  = "http://localhost:7001/"; //whichever endpoint our gateway using  
+	
 	
 	public PlanetService(RestTemplate restTemplate) {
 		this.restTemplate = restTemplate;
 	}
 	
 	
+	
+	//Resilience4J annotation 
+	@Retry(name="planetSearch", fallbackMethod = "reliableMethod") //if this method fails, then we'll switch to reliableMethod!
 	public List<Planet> getPlanetFromOtherService(){
 		
-		URI uri = URI.create(endpoint + "planets"); //"http://localhost:<port>/planets"
+		URI uri = URI.create("http://localhost:7001/planet-api/planets"); //"http://localhost:9700/planets"
 		
 		Planet[] allThePlanets = this.restTemplate.getForObject(uri, Planet[].class); // getting the array of planets from the endpoint 
 		
@@ -58,12 +66,16 @@ public class PlanetService {
 		return planetList;
 	}
 	
-	//Add in the rest of the CRUD operations 
-	
-	// insert()
-	
-	// delete()
-	
-	
+	// Our "reliable" method!
+	public List<Planet> reliableMethod() {
+		
+		Planet p = new Planet(-1, "Fake",0);
+		List<Planet> planetList = new ArrayList<>();
+		planetList.add(p);
+		
+		return planetList;
+		
+		
+	}
 	
 }
