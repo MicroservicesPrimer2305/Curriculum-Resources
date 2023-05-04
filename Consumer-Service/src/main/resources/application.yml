@@ -1,0 +1,16 @@
+resilience4j:
+  retry:
+    instances:
+      planetSearch:
+        max-attempts: 2
+        wait-duration: 2s
+      getAllMoons:
+        max-attempts: 4
+        wait-duration: 1s
+server:
+  port: 8030
+spring:
+  application:
+    name: Consumer-Service
+  config:
+    import: 'optional:consul: '

@@ -1,5 +1,7 @@
 package com.example.demo.models;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -10,6 +12,8 @@ public class Planet {
 	private String name;
 	
 	private double mass;
+	
+	private List<Moon> moonList = new ArrayList<>();
 	
 	
 	
@@ -41,13 +45,19 @@ public class Planet {
 	public void setMass(double mass) {
 		this.mass = mass;
 	}
-	@Override
-	public String toString() {
-		return "Planet [id=" + id + ", name=" + name + ", mass=" + mass + "]";
+	public List<Moon> getMoonList() {
+		return moonList;
+	}
+	public void setMoonList(List<Moon> moonList) {
+		this.moonList = moonList;
+	}
+	
+	public void addMoon(Moon m) {
+		this.moonList.add(m);
 	}
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, mass, name);
+		return Objects.hash(id, mass, moonList, name);
 	}
 	@Override
 	public boolean equals(Object obj) {
@@ -59,8 +69,15 @@ public class Planet {
 			return false;
 		Planet other = (Planet) obj;
 		return id == other.id && Double.doubleToLongBits(mass) == Double.doubleToLongBits(other.mass)
-				&& Objects.equals(name, other.name);
+				&& Objects.equals(moonList, other.moonList) && Objects.equals(name, other.name);
 	}
+	@Override
+	public String toString() {
+		return "Planet [id=" + id + ", name=" + name + ", mass=" + mass + ", moonList=" + moonList + "]";
+	}
+	
+	
+	
 	
 	
 

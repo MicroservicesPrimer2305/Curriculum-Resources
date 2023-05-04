@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.demo.models.Moon;
 import com.example.demo.models.Planet;
 
 import io.github.resilience4j.retry.annotation.Retry;
@@ -45,8 +45,12 @@ public class PlanetService {
 	private final String endpoint  = "http://localhost:7001/"; //whichever endpoint our gateway using  
 	
 	
-	public PlanetService(RestTemplate restTemplate) {
+	private final MoonService moonService;
+	
+	
+	public PlanetService(RestTemplate restTemplate, MoonService moonService) {
 		this.restTemplate = restTemplate;
+		this.moonService = moonService;
 	}
 	
 	
@@ -63,19 +67,69 @@ public class PlanetService {
 		
 		List<Planet> planetList = Arrays.asList(allThePlanets);
 		
+		
+		
+		//time to get the moons! 
+		
+		//DRY - Don't repeat yourself 
+		List<Moon> moonList = moonService.getMoons();
+		
+		
+		for(Planet p: planetList ) {
+			
+			for(Moon m: moonList) {
+				
+				if(p.getName().equals(m.getMyPlanet())) {
+					
+					//if the moon's myPlanet name match the planet, we'll add it to the Planet
+					
+					p.addMoon(m);
+				}
+			}
+		}
+		
+		
+		
+		
 		return planetList;
 	}
 	
-	// Our "reliable" method!
-	public List<Planet> reliableMethod() {
+	// Our "reliable" method! Need to provide an exception argument
+	public List<Planet> reliableMethod(Exception e) {
 		
-		Planet p = new Planet(-1, "Fake",0);
+		Planet p = new Planet(-1, e.getMessage(),0);
 		List<Planet> planetList = new ArrayList<>();
 		planetList.add(p);
 		
 		return planetList;
 		
 		
+	}
+
+
+
+	public void storePlanet(Planet p) {
+		
+		URI uri = URI.create("http://localhost:7001/planet-api/planet"); //"http://localhost:9700/planets"
+		
+		this.restTemplate.postForObject(uri, p, Boolean.class);
+		
+		
+	}
+
+
+
+	public boolean checkPlanetExists(Moon m) {
+		
+		List<Planet> planetList = this.getPlanetFromOtherService();
+		
+		for(Planet p: planetList) {
+			if(m.getMyPlanet().equals(p.getName())) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 }

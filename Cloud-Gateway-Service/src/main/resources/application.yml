@@ -18,7 +18,7 @@ spring:
         filters: # This is used to modify the original request 
         - SetPath=/ #Delete the example path value so that the request is simple www.google.com
       
-      #Terrible way of oding it!!!!!!
+      #Terrible way of doing it!!!!!!
       - id: hardcoded-planet-service-route 
         uri: http://localhost:9900 # we will route to a specific instance 
         predicates:
@@ -49,4 +49,16 @@ spring:
         # Route: consists of an ID, a destination URI and a collection of predicates and filters: 
         # Predicates: build of Java 8 function predicates - this alows us to match requests to our routes (HTTP uri, methods, time, cookies, etc . )
         # Filter: These are instances of Spring Gateway filters, allows us to modify the requests or responses before being sent 
+      
+      
+      
+      - id: moon-service 
+        uri: lb://Moon-Service
+        predicates: 
+        - Path=/moon-api/**
+        filters: 
+        - RewritePath=/moon-api(?<segment>/?.*), $\{segment}
+      
+      
+      
       
