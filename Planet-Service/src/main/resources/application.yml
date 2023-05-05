@@ -18,5 +18,5 @@ spring:
   
   application:
     name: My-Very-Fun-Planet-Service  
-  config:
-    import: 'optional:consul:'
+  #config:
+  # import: 'optional:consul:'
